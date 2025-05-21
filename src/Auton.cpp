@@ -3,7 +3,7 @@
 AutonMode selectedAuton = AutonMode::NONE;
 
 void runSkills(DriveBase &drive) {
-  // write when we have a working bot lmao
+  // write when we have a working bot
 }
 
 void runLeftGoal(DriveBase &drive) {
