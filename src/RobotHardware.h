@@ -26,10 +26,10 @@ public:
 
   void init() {
     imu.reset();
-    //imu.calibrate();
+    //calibrate() we need to create this function
   }
 
-  /// Call every cycle in opcontrol()
+  /// calls in every cycle in opcontrol()
   void update() {
     switch (fsm.get()) {
       case State::IDLE:
@@ -49,8 +49,7 @@ private:
   StateMachine<State>   fsm;
 
   //we can add stuff like this
-  // void autondrive() { … }
-  // void handleIntake()    { … }
+  // void handleIntake() {insert stuff}
 };
 
 #endif
