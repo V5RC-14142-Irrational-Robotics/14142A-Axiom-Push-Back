@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "RobotValues.h"
+#include <pros/imu.hpp>
 #include <vector>
 
 class DriveBase {
@@ -15,17 +16,45 @@ public:
   void recordCurrents();
   void displayHistory();
 
-  /// Drive helpers
+  // Robotcentric
   void driveXYW(double rx, double ry, double rw, double vel = 1.0);
   bool driveXYH(double rx, double ry, double targetH, double gain = 0.006);
+
+  // Fieldcentric
   void driveFieldXYW(double fx, double fy, double rw, double vel = 1.0);
+  void driveDistance(double inches, double vel = 1.0);
 
-  /// IMU helpers
-  double getHeading();
-  bool   isHeading(double targetH, double tolDeg);
-  double calcRVW(double targetH, double gain = 0.006);
+  // IMU accessors
+  std::int32_t    imuReset(bool blocking = false);
+  double          imuGetRotation();
+  double          imuGetHeading();
+  pros::quaternion_s_t imuGetQuaternion();
+  pros::euler_s_t      imuGetEuler();
+  double          imuGetPitch();
+  double          imuGetRoll();
+  double          imuGetYaw();
+  pros::imu_gyro_s_t   imuGetGyroRate();
+  pros::imu_accel_s_t  imuGetAccel();
+  bool            imuIsCalibrating();
 
-  /// Emergency (zero all motors)
+  // Tare (zero) ops
+  std::int32_t imuTareRotation();
+  std::int32_t imuTareHeading();
+  std::int32_t imuTarePitch();
+  std::int32_t imuTareRoll();
+  std::int32_t imuTareYaw();
+  std::int32_t imuTare();
+  std::int32_t imuTareEuler();
+
+  // Manual set orientation
+  std::int32_t imuSetHeading(double heading);
+  std::int32_t imuSetRotation(double rotation);
+  std::int32_t imuSetYaw(double yaw);
+  std::int32_t imuSetPitch(double pitch);
+  std::int32_t imuSetRoll(double roll);
+  std::int32_t imuSetEuler(const pros::euler_s_t &euler);
+
+  // Emergency stop
   bool stop();
 
 private:
@@ -34,7 +63,13 @@ private:
   std::vector<pros::Motor> _leftMotors, _rightMotors;
   std::vector<double>      _lfHist, _lbHist, _rfHist, _rbHist;
 
-  static double normalizeAngle(double deg);
+
+  double            calcRVW(double targetH, double gain);
+  static double     normalizeAngle(double deg);
+
+  static double inchesToDegrees(double inches) {
+    return (inches / RobotValues::WHEEL_CIRCUMFERENCE) * 360.0;
+  }
 };
 
 #endif

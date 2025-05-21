@@ -1,5 +1,6 @@
 #include "DriveBase.h"
 #include <cmath>
+#include <algorithm>
 
 DriveBase::DriveBase(pros::Controller &master)
   : _master(master),
@@ -23,16 +24,15 @@ void DriveBase::init() {
 }
 
 void DriveBase::arcadeDrive() {
-  int pwr  = _master.get_analog(ANALOG_LEFT_Y);
-  int turn = _master.get_analog(ANALOG_RIGHT_X);
-  int L = pwr + turn;
-  int R = pwr - turn;
+  int p = _master.get_analog(ANALOG_LEFT_Y);
+  int t = _master.get_analog(ANALOG_RIGHT_X);
+  int L = p + t, R = p - t;
   for (auto &m : _leftMotors)  m.move(L);
   for (auto &m : _rightMotors) m.move(R);
 }
 
 void DriveBase::recordCurrents() {
-  auto log = [&](pros::Motor &m, std::vector<double> &hist){
+  auto log = [&](pros::Motor &m, auto &hist){
     double c = m.get_current_draw();
     if (c > 3.5) hist.push_back(c);
   };
@@ -49,30 +49,14 @@ void DriveBase::displayHistory() {
   pros::lcd::set_text(1, out.c_str());
 }
 
-double DriveBase::getHeading() {
-  return _imu.get_heading();
-}
-
-bool DriveBase::isHeading(double targetH, double tolDeg) {
-  double err = normalizeAngle(targetH - getHeading());
-  return std::fabs(err) < tolDeg;
-}
-
-double DriveBase::calcRVW(double targetH, double gain) {
-  double err = normalizeAngle(targetH - getHeading());
-  double w   = err * gain;
-  return std::clamp(w, -1.0, 1.0);
-}
+// drive methods
 
 void DriveBase::driveXYW(double rx, double ry, double rw, double vel) {
   double D  = std::max(std::fabs(ry) + std::fabs(rx) + std::fabs(rw), 1.0);
   double lf = ( rx - ry - rw) / D;
   double rf = ( rx + ry + rw) / D;
-  double lb = ( rx + ry - rw) / D;
-  double rb = ( rx - ry + rw) / D;
-
-  int L = int(lf * vel * 127.0);
-  int R = int(rf * vel * 127.0);
+  int    L  = int(lf * vel * 127.0);
+  int    R  = int(rf * vel * 127.0);
   for (auto &m : _leftMotors)  m.move(L);
   for (auto &m : _rightMotors) m.move(R);
 }
@@ -84,16 +68,66 @@ bool DriveBase::driveXYH(double rx, double ry, double targetH, double gain) {
 }
 
 void DriveBase::driveFieldXYW(double fx, double fy, double rw, double vel) {
-  double theta  = getHeading() * M_PI / 180.0;
-  double rx = fx * std::cos(-theta) - fy * std::sin(-theta);
-  double ry = fx * std::sin(-theta) + fy * std::cos(-theta);
+  double theta  = imuGetHeading() * M_PI / 180.0;
+  double rx =  fx * std::cos(-theta) - fy * std::sin(-theta);
+  double ry =  fx * std::sin(-theta) + fy * std::cos(-theta);
   driveXYW(rx, ry, rw, vel);
+}
+
+void DriveBase::driveDistance(double inches, double vel) {
+  double targetDeg = inchesToDegrees(inches);
+
+  for (auto &m : _leftMotors)  m.tare_position();
+  for (auto &m : _rightMotors) m.tare_position();
+
+  for (auto &m : _leftMotors)  m.move_relative(targetDeg, vel * 127.0);
+  for (auto &m : _rightMotors) m.move_relative(targetDeg, vel * 127.0);
+
+  while (true) {
+    if (std::abs(_leftMotors.front().get_position()) >= targetDeg) break;
+    pros::delay(10);
+  }
 }
 
 bool DriveBase::stop() {
   for (auto &m : _leftMotors)  m.move(0);
   for (auto &m : _rightMotors) m.move(0);
   return true;
+}
+
+//imu stuff
+
+std::int32_t DriveBase::imuReset(bool blocking)               { return _imu.reset(blocking); }
+double       DriveBase::imuGetRotation()                      { return _imu.get_rotation(); }
+double       DriveBase::imuGetHeading()                       { return _imu.get_heading(); }
+pros::quaternion_s_t DriveBase::imuGetQuaternion()            { return _imu.get_quaternion(); }
+pros::euler_s_t      DriveBase::imuGetEuler()                 { return _imu.get_euler(); }
+double       DriveBase::imuGetPitch()                         { return _imu.get_pitch(); }
+double       DriveBase::imuGetRoll()                          { return _imu.get_roll(); }
+double       DriveBase::imuGetYaw()                           { return _imu.get_yaw(); }
+pros::imu_gyro_s_t   DriveBase::imuGetGyroRate()              { return _imu.get_gyro_rate(); }
+pros::imu_accel_s_t  DriveBase::imuGetAccel()                 { return _imu.get_accel(); }
+bool         DriveBase::imuIsCalibrating()                    { return _imu.is_calibrating(); }
+
+std::int32_t DriveBase::imuTareRotation()                     { return _imu.tare_rotation(); }
+std::int32_t DriveBase::imuTareHeading()                      { return _imu.tare_heading(); }
+std::int32_t DriveBase::imuTarePitch()                        { return _imu.tare_pitch(); }
+std::int32_t DriveBase::imuTareRoll()                         { return _imu.tare_roll(); }
+std::int32_t DriveBase::imuTareYaw()                          { return _imu.tare_yaw(); }
+std::int32_t DriveBase::imuTare()                             { return _imu.tare(); }
+std::int32_t DriveBase::imuTareEuler()                        { return _imu.tare_euler(); }
+
+std::int32_t DriveBase::imuSetHeading(double h)               { return _imu.set_heading(h); }
+std::int32_t DriveBase::imuSetRotation(double r)              { return _imu.set_rotation(r); }
+std::int32_t DriveBase::imuSetYaw(double y)                   { return _imu.set_yaw(y); }
+std::int32_t DriveBase::imuSetPitch(double p)                 { return _imu.set_pitch(p); }
+std::int32_t DriveBase::imuSetRoll(double r)                  { return _imu.set_roll(r); }
+std::int32_t DriveBase::imuSetEuler(const pros::euler_s_t &e) { return _imu.set_euler(e); }
+
+double DriveBase::calcRVW(double targetH, double gain) {
+  double err = normalizeAngle(targetH - imuGetHeading());
+  double w   = err * gain;
+  return std::clamp(w, -1.0, 1.0);
 }
 
 double DriveBase::normalizeAngle(double deg) {

@@ -15,6 +15,9 @@ namespace RobotValues {
   constexpr int IMU_PORT = 7;
 
   constexpr double MAX_VELOCITY = 200.0;
+
+  constexpr double WHEEL_DIAMETER_INCH = 4.0;
+  constexpr double WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER_INCH * M_PI;
 }
 
 #endif
