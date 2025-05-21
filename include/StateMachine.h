@@ -5,8 +5,8 @@ template <typename State>
 class StateMachine
 {
 public:
-    StateMachine(State start) : _current(start), _previous(start) {}
-    // switch states
+    explicit StateMachine(State start) : _current(start), _previous(start) {}
+
     void set(State next)
     {
         _previous = _current;
@@ -15,6 +15,8 @@ public:
 
     State get() const { return _current; }
     State prev() const { return _previous; }
+
+    bool changed() const { return _current != _previous; }
 
 private:
     State _current;

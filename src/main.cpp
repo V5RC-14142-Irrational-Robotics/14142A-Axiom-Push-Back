@@ -1,30 +1,52 @@
 #include "main.h"
-#include "DriveBase.h"
 #include "RobotValues.h"
-#include "StateMachine.h"
 #include "RobotHardware.h"
+#include "Auton.h"
 
-pros::Controller ctrl(pros::E_CONTROLLER_MASTER);
-RobotHardware    robot(ctrl);
+pros::Controller master(pros::E_CONTROLLER_MASTER);
+RobotHardware    robot(master);
 
 void initialize() {
   pros::lcd::initialize();
-  pros::lcd::set_text(1, "Hello PROS User!");
-  //pros::lcd::register_btn1_cb(on_center_button);
+  pros::lcd::set_text(1, "Press A/B/X to select auton");
   robot.init();
 }
 
 void disabled() {}
-void competition_initialize() {}
-void autonomous() {}
+
+void competition_initialize() {
+  // let kevin pick the auton before match starts
+  while (!pros::competition::is_autonomous()) {
+    if (master.get_digital_new_press(DIGITAL_A)) {
+      selectedAuton = AutonMode::SKILLS;
+      pros::lcd::set_text(2, "Auton: Skills");
+    }
+    if (master.get_digital_new_press(DIGITAL_B)) {
+      selectedAuton = AutonMode::LEFT_GOAL;
+      pros::lcd::set_text(2, "Auton: Left");
+    }
+    if (master.get_digital_new_press(DIGITAL_X)) {
+      selectedAuton = AutonMode::RIGHT_GOAL;
+      pros::lcd::set_text(2, "Auton: Right");
+    }
+    pros::delay(20);
+  }
+}
+
+void autonomous() {
+  robot.setState(RobotHardware::State::AUTONOMOUS);
+
+  switch (selectedAuton) {
+    case AutonMode::SKILLS:     runSkills(robot.driveBase);     break;
+    case AutonMode::LEFT_GOAL:  runLeftGoal(robot.driveBase);   break;
+    case AutonMode::RIGHT_GOAL: runRightGoal(robot.driveBase);  break;
+    default: /* none */;                                   break;
+  }
+}
 
 void opcontrol() {
+  robot.setState(RobotHardware::State::DRIVER);
   while (true) {
-
-    if (ctrl.get_digital(DIGITAL_A))
-      robot.setState(RobotHardware::State::IDLE);
-    // else if (…) robot.setState(…);
-
     robot.update();
     pros::delay(20);
   }
