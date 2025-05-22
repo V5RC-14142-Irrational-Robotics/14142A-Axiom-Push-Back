@@ -3,6 +3,7 @@
 
 #include "DriveBase.h"
 #include "StateMachine.h"
+#include "Telemetry.h"
 
 class RobotHardware {
 public:
@@ -23,6 +24,9 @@ public:
 
 private:
   StateMachine<State> fsm;
+  Telemetry           telem;
+
+  void updateDashboard();
 };
 
 #endif

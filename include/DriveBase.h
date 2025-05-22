@@ -13,9 +13,11 @@ public:
   void init();
   void arcadeDrive();
 
-  void recordCurrents();
-  void displayHistory();
+  std::vector<double> getCurrents();
 
+  int getLeftPosition() const;
+  int getRightPosition() const;
+  
   // Robotcentric
   void driveYW(double forward, double turn, double vel = 1.0);
   bool driveYH(double forward, double targetH, double gain = 0.006);

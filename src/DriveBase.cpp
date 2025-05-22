@@ -31,22 +31,20 @@ void DriveBase::arcadeDrive() {
   for (auto &m : _rightMotors) m.move(R);
 }
 
-void DriveBase::recordCurrents() {
-  auto log = [&](pros::Motor &m, auto &hist){
-    double c = m.get_current_draw();
-    if (c > 3.5) hist.push_back(c);
-  };
-  for (auto &m : _leftMotors)  log(m, _lfHist);
-  for (auto &m : _leftMotors)  log(m, _lbHist);
-  for (auto &m : _rightMotors) log(m, _rfHist);
-  for (auto &m : _rightMotors) log(m, _rbHist);
+std::vector<double> DriveBase::getCurrents() {
+  std::vector<double> currents;
+  currents.reserve(_leftMotors.size() + _rightMotors.size());
+  for (auto &m : _leftMotors)  currents.push_back(m.get_current_draw());
+  for (auto &m : _rightMotors) currents.push_back(m.get_current_draw());
+  return currents;
 }
 
-void DriveBase::displayHistory() {
-  std::string out;
-  for (double v : _lfHist) out += std::to_string(v) + " ";
-  pros::lcd::clear();
-  pros::lcd::set_text(1, out.c_str());
+int DriveBase::getLeftPosition() const {
+  return _leftMotors.empty() ? 0 : _leftMotors.front().get_position();
+}
+
+int DriveBase::getRightPosition() const {
+  return _rightMotors.empty() ? 0 : _rightMotors.front().get_position();
 }
 
 // drive methods
