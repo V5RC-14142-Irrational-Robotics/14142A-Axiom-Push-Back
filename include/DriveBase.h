@@ -17,11 +17,11 @@ public:
   void displayHistory();
 
   // Robotcentric
-  void driveXYW(double rx, double ry, double rw, double vel = 1.0);
-  bool driveXYH(double rx, double ry, double targetH, double gain = 0.006);
+  void driveYW(double forward, double turn, double vel = 1.0);
+  bool driveYH(double forward, double targetH, double gain = 0.006);
 
   // Fieldcentric
-  void driveFieldXYW(double fx, double fy, double rw, double vel = 1.0);
+  void driveFieldYW(double fw, double turn, double vel = 1.0);
   void driveDistance(double inches, double vel = 1.0);
 
   // IMU accessors

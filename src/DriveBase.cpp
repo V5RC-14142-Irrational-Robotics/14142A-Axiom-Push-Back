@@ -50,28 +50,29 @@ void DriveBase::displayHistory() {
 }
 
 // drive methods
+void DriveBase::driveYW(double forward, double turn, double vel) {
+  double sum = std::fabs(forward) + std::fabs(turn);
+  double D   = std::max(sum, 1.0);
+  double lf  = ( forward - turn) / D;
+  double rf  = ( forward + turn) / D;
 
-void DriveBase::driveXYW(double rx, double ry, double rw, double vel) {
-  double D  = std::max(std::fabs(ry) + std::fabs(rx) + std::fabs(rw), 1.0);
-  double lf = ( rx - ry - rw) / D;
-  double rf = ( rx + ry + rw) / D;
-  int    L  = int(lf * vel * 127.0);
-  int    R  = int(rf * vel * 127.0);
+  int L = int(lf * vel * 127.0);
+  int R = int(rf * vel * 127.0);
+
   for (auto &m : _leftMotors)  m.move(L);
   for (auto &m : _rightMotors) m.move(R);
 }
 
-bool DriveBase::driveXYH(double rx, double ry, double targetH, double gain) {
+bool DriveBase::driveYH(double forward, double targetH, double gain) {
   double w = calcRVW(targetH, gain);
-  driveXYW(rx, ry, w, 1.0);
+  driveYW(forward, w * 127.0, 1.0);
   return false;
 }
 
-void DriveBase::driveFieldXYW(double fx, double fy, double rw, double vel) {
-  double theta  = imuGetHeading() * M_PI / 180.0;
-  double rx =  fx * std::cos(-theta) - fy * std::sin(-theta);
-  double ry =  fx * std::sin(-theta) + fy * std::cos(-theta);
-  driveXYW(rx, ry, rw, vel);
+void DriveBase::driveFieldYW(double fw, double turn, double vel) {
+  double theta = imuGetHeading() * M_PI/180.0;
+  double robotForward = fw * std::cos(-theta);
+  driveYW(robotForward * 127.0, turn, vel);
 }
 
 void DriveBase::driveDistance(double inches, double vel) {
