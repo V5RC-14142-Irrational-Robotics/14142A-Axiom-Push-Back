@@ -9,15 +9,32 @@ namespace RobotValues {
   inline const std::initializer_list<int> LEFT_DRIVE_PORTS  {  1, -2,  3 };
   inline const std::initializer_list<int> RIGHT_DRIVE_PORTS { -4,  5, -6 };
 
-  constexpr pros::v5::MotorGears DRIVE_GEAR   = pros::v5::MotorGears::blue;
-  constexpr pros::v5::MotorUnits ENCODER_UNITS = pros::v5::MotorUnits::degrees;
+  constexpr int DIST_FRONT_PORT  = 1; //change ltr
+  constexpr int DIST_RIGHT_PORT  = 2;
+  constexpr int DIST_BACK_PORT   = 3;
+  constexpr int DIST_LEFT_PORT   = 4;
 
   constexpr int IMU_PORT = 7;
 
+  constexpr pros::v5::MotorGears DRIVE_GEAR   = pros::v5::MotorGears::blue;
+  constexpr pros::v5::MotorUnits ENCODER_UNITS = pros::v5::MotorUnits::degrees;
+
   constexpr double MAX_VELOCITY = 200.0;
 
-  constexpr double WHEEL_DIAMETER_INCH = 4.0;
+  constexpr double WHEEL_DIAMETER_INCH = 2.75;
   constexpr double WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER_INCH * M_PI;
+
+  constexpr double FIELD_WIDTH_IN  = 144.0;
+  constexpr double FIELD_HEIGHT_IN = 144.0;
+
+  constexpr double WHEEL_BASE_IN   = 9.558;
+
+  // For MCL
+  constexpr int    NUM_PARTICLES  = 200;
+  constexpr double MOTION_STD_FWD = 0.5;   // inches
+  constexpr double MOTION_STD_ANG = 2.0;   // degrees
+  constexpr double SENSE_STD      = 2.0;   // inches
+
 }
 
 #endif

@@ -123,6 +123,14 @@ std::int32_t DriveBase::imuSetPitch(double p)                 { return _imu.set_
 std::int32_t DriveBase::imuSetRoll(double r)                  { return _imu.set_roll(r); }
 std::int32_t DriveBase::imuSetEuler(const pros::euler_s_t &e) { return _imu.set_euler(e); }
 
+int DriveBase::getLeftPosition() const {
+  return _leftMotors.empty() ? 0 : _leftMotors.front().get_position();
+}
+
+int DriveBase::getRightPosition() const {
+  return _rightMotors.empty() ? 0 : _rightMotors.front().get_position();
+}
+
 double DriveBase::calcRVW(double targetH, double gain) {
   double err = normalizeAngle(targetH - imuGetHeading());
   double w   = err * gain;

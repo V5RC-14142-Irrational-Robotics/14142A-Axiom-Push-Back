@@ -55,6 +55,10 @@ public:
   std::int32_t imuSetPitch(double pitch);
   std::int32_t imuSetRoll(double roll);
   std::int32_t imuSetEuler(const pros::euler_s_t &euler);
+  pros::Imu &getImu() { return _imu; }
+
+  int getLeftPosition() const;
+  int getRightPosition() const;
 
   // Emergency stop
   bool stop();
