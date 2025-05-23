@@ -1,5 +1,7 @@
 #include "RobotHardware.h"
 #include <tuple>
+#include <cmath>
+
 RobotHardware::RobotHardware(pros::Controller &master)
   : driveBase(master),
     frontDist(RobotValues::DIST_FRONT_PORT),
@@ -21,44 +23,59 @@ void RobotHardware::init() {
 
 void RobotHardware::update() {
   switch (fsm.get()) {
-    case State::IDLE:       driveBase.stop();         break;
-    case State::DRIVER:     driveBase.arcadeDrive();  break;
-    case State::AUTONOMOUS: break;
+    case State::IDLE:       driveBase.stop();        break;
+    case State::DRIVER:     driveBase.arcadeDrive(); break;
+    case State::AUTONOMOUS:  break;
   }
 
   localizer.motionUpdate();
   localizer.measurementUpdate();
   localizer.resample();
-  auto [x, y, theta] = localizer.getEstimate();
-
   updateDashboard();
-
-  telem.addLine("X",   [x]()     { return std::to_string(x);     });
-  telem.addLine("Y",   [y]()     { return std::to_string(y);     });
-  telem.addLine("Th",  [theta](){ return std::to_string(theta); });
-  telem.addLine("HDG", [this](){
-    return std::to_string(driveBase.imuGetHeading());
-  });
-  telem.addLine("FDst", [this](){
-    return std::to_string(frontDist.get());
-  });
-  telem.addLine("LPos", [this](){
-    return std::to_string(driveBase.getLeftPosition());
-  });
-  telem.addLine("RPos", [this](){
-    return std::to_string(driveBase.getRightPosition());
-  });
-
   telem.display();
 }
 
 void RobotHardware::updateDashboard() {
   telem.clear();
   switch (fsm.get()) {
-    case State::IDLE:       telem.addLine("Mode", "IDLE");       break;
-    case State::DRIVER:     telem.addLine("Mode", "DRIVER");     break;
-    case State::AUTONOMOUS: telem.addLine("Mode", "AUTONOM");    break;
+    case State::IDLE:       telem.addLine("Mode", "IDLE");    break;
+    case State::DRIVER:     telem.addLine("Mode", "DRIVER");  break;
+    case State::AUTONOMOUS: telem.addLine("Mode", "AUTONOM"); break;
   }
+
+}
+
+bool RobotHardware::moveToXYH(double tx,
+                              double ty,
+                              double targetH,
+                              double fwdPower,
+                              double distTol,
+                              double headingTol,
+                              double headingGain) {
+  // current esitmate
+  auto [x, y, theta] = localizer.getEstimate();
+  double dx   = tx - x;
+  double dy   = ty - y;
+  double dist = std::hypot(dx, dy);
+
+  // phase 1 drive toward the waypoint
+  if (dist > distTol) {
+    double absAng = std::atan2(dy, dx) * 180.0 / M_PI;
+    driveBase.driveYH(fwdPower, absAng, headingGain);
+    return false;
+  }
+
+  // phase 2: rotate to final heading
+  double errH = std::fabs(
+    std::fmod((targetH - theta + 540.0), 360.0) - 180.0
+  ); 
+  if (errH > headingTol) {
+    driveBase.driveYH(0.0, targetH, headingGain);
+    return false;
+  }
+
+  driveBase.stop();
+  return true;
 }
 
 void RobotHardware::setState(State s) {
