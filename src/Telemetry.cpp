@@ -38,7 +38,7 @@ void Telemetry::display() {
   for (std::int16_t i = 0; i < lines.size() && i < 8; ++i) {
     auto &entry = lines[i];
     std::string text = entry.first + ": " + entry.second();
-    pros::screen::set_pen(pros::Color::white);
+    pros::screen::set_pen(pros::Color::black);
     pros::screen::print(pros::E_TEXT_MEDIUM, i, text.c_str());
   }
 }

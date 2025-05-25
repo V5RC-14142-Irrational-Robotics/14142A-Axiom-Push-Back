@@ -42,10 +42,12 @@ void competition_initialize() {
       selectedAuton = AutonMode::RIGHT_GOAL;
     }
     if (master.get_digital_new_press(DIGITAL_UP)) {
-      // set alliance to Red ltr
+      pros::screen::set_eraser(pros::Color::red);
+      pros::screen::erase();
     }
     if (master.get_digital_new_press(DIGITAL_DOWN)) {
-      // set alliance to Blue ltr
+      pros::screen::set_eraser(pros::Color::deep_sky_blue);
+      pros::screen::erase();
     }
 
     telem.clear();
