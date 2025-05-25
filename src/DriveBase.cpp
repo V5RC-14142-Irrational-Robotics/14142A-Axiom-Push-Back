@@ -23,13 +23,24 @@ void DriveBase::init() {
   pros::delay(100);
 }
 
-void DriveBase::arcadeDrive() {
-  int t = _master.get_analog(ANALOG_LEFT_Y);
-  int p = _master.get_analog(ANALOG_RIGHT_X);
+//shouryas fix
+// void DriveBase::arcadeDrive() {
+//   int t = _master.get_analog(ANALOG_LEFT_Y);
+//   int p = _master.get_analog(ANALOG_RIGHT_X);
  
-  int L = p + t* 0.65;
-  int R = p - t * 0.65;
+//   int L = p + t* 0.65;
+//   int R = p - t * 0.65;
 
+//   for (auto &m : _leftMotors)  m.move(L);
+//   for (auto &m : _rightMotors) m.move(R);
+// }
+
+void DriveBase::arcadeDrive() {
+  int p = _master.get_analog(ANALOG_LEFT_Y);
+  int t = _master.get_analog(ANALOG_RIGHT_X);
+  double turningSpeedFactor = 0.65;
+  int L = p + t*turningSpeedFactor;
+  int R = p - t*turningSpeedFactor;
   for (auto &m : _leftMotors)  m.move(L);
   for (auto &m : _rightMotors) m.move(R);
 }
@@ -57,8 +68,8 @@ void DriveBase::driveYW(double forward, double turn, double vel) {
   double lf  = ( forward - turn) / D;
   double rf  = ( forward + turn) / D;
 
-  int L = int(lf * vel * 127.0);
-  int R = int(rf * vel * 127.0);
+  int L = int(lf * vel);
+  int R = int(rf * vel);
   
 
   for (auto &m : _leftMotors)  m.move(L);
@@ -67,14 +78,14 @@ void DriveBase::driveYW(double forward, double turn, double vel) {
 
 bool DriveBase::driveYH(double forward, double targetH, double gain) {
   double w = calcRVW(targetH, gain);
-  driveYW(forward, w * 127.0, 1.0);
+  driveYW(forward, w, 1.0);
   return false;
 }
 
 void DriveBase::driveFieldYW(double fw, double turn, double vel) {
   double theta = imuGetHeading() * M_PI/180.0;
   double robotForward = fw * std::cos(-theta);
-  driveYW(robotForward * 127.0, turn, vel);
+  driveYW(robotForward, turn, vel);
 }
 
 void DriveBase::driveDistance(double inches, double vel) {
@@ -83,8 +94,8 @@ void DriveBase::driveDistance(double inches, double vel) {
   for (auto &m : _leftMotors)  m.tare_position();
   for (auto &m : _rightMotors) m.tare_position();
 
-  for (auto &m : _leftMotors)  m.move_absolute(targetDeg, vel * 127.0);
-  for (auto &m : _rightMotors) m.move_absolute(targetDeg, vel * 127.0);
+  for (auto &m : _leftMotors)  m.move_absolute(targetDeg, vel);
+  for (auto &m : _rightMotors) m.move_absolute(targetDeg, vel);
 
   while (true) {
     if (std::abs(_leftMotors.front().get_position()) >= targetDeg) break;
@@ -126,14 +137,6 @@ std::int32_t DriveBase::imuSetYaw(double y)                   { return _imu.set_
 std::int32_t DriveBase::imuSetPitch(double p)                 { return _imu.set_pitch(p); }
 std::int32_t DriveBase::imuSetRoll(double r)                  { return _imu.set_roll(r); }
 std::int32_t DriveBase::imuSetEuler(const pros::euler_s_t &e) { return _imu.set_euler(e); }
-
-// int DriveBase::getLeftPosition() const {
-//   return _leftMotors.empty() ? 0 : _leftMotors.front().get_position();
-// }
-
-// int DriveBase::getRightPosition() const {
-//   return _rightMotors.empty() ? 0 : _rightMotors.front().get_position();
-// }
 
 double DriveBase::calcRVW(double targetH, double gain) {
   double err = normalizeAngle(targetH - imuGetHeading());
