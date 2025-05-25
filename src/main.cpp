@@ -68,10 +68,10 @@ void autonomous() {
 }
 
 void opcontrol() {
-  //robot.setState(RobotHardware::State::DRIVER);
-//   while (true) {
-//     robot.update();
-//     pros::delay(20);
-//   }
-runSkills(robot.driveBase);
+  robot.setState(RobotHardware::State::DRIVER);
+  while (true) {
+    robot.update();
+    pros::delay(20);
+  }
+//runSkills(robot.driveBase);
 }
