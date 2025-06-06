@@ -19,7 +19,7 @@ public:
   void addLine(const std::string &label,
                std::function<std::string()> getter);
 
-  void display();
+  void display(const bool &color);
 
 private:
   std::vector<std::pair<std::string,

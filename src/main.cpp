@@ -7,6 +7,7 @@
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 RobotHardware    robot(master);
 Telemetry        telem;
+bool color = false; //false red, true blue
 
 static std::string getAutonName() {
   switch (selectedAuton) {
@@ -24,7 +25,7 @@ void initialize() {
   telem.addLine("ABXY", "A:Skills B:Left X:Right");
   telem.addLine("UP/DN", "Red/Blue");
   telem.addLine("Sel",   getAutonName());
-  telem.display();
+  telem.display(color);
 }
 
 void disabled() {
@@ -42,18 +43,16 @@ void competition_initialize() {
       selectedAuton = AutonMode::RIGHT_GOAL;
     }
     if (master.get_digital_new_press(DIGITAL_UP)) {
-      pros::screen::set_eraser(pros::Color::red);
-      pros::screen::erase();
+      color = false;
     }
     if (master.get_digital_new_press(DIGITAL_DOWN)) {
-      pros::screen::set_eraser(pros::Color::deep_sky_blue);
-      pros::screen::erase();
+      color = true;
     }
 
     telem.clear();
-    telem.addLine("ABXY", "A:Sk B:L X:R");
+    telem.addLine("ABXY, UP/DWN", "A:Sk B:L X:R, UP: R DWN: B");
     telem.addLine("Sel", getAutonName());
-    telem.display();
+    telem.display(color);
 
     pros::delay(50);
   }

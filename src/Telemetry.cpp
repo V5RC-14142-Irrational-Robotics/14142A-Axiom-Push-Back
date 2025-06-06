@@ -33,11 +33,15 @@ void Telemetry::addLine(const std::string &label,
   lines.emplace_back(label, std::move(getter));
 }
 
-void Telemetry::display() {
-  pros::lcd::clear();
+void Telemetry::display(const bool &color) {
   for (std::int16_t i = 0; i < lines.size() && i < 8; ++i) {
     auto &entry = lines[i];
     std::string text = entry.first + ": " + entry.second();
+    
+    if (color) {pros::screen::set_eraser(pros::Color::deep_sky_blue);}
+    else {pros::screen::set_eraser(pros::Color::red);}
+    pros::screen::erase();
+    
     pros::screen::set_pen(pros::Color::black);
     pros::screen::print(pros::E_TEXT_MEDIUM, i, text.c_str());
   }
